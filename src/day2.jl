@@ -21,5 +21,13 @@ function one_play(pick_opp, pick_me)
     pick_me == 'Z' && pick_opp == 'C' && (points += 3)
     points
 end
-println(input_array[1,:][2])
-map(row -> one_play(row[1],row[2]), input_array)
+
+function part1(input_array)
+    points = 0
+    for row in eachrow(input_array)
+        points += one_play(row[1],row[2])
+    end
+    points
+end
+
+println("Part1: ",part1(input_array))
