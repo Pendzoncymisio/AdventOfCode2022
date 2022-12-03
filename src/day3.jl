@@ -28,8 +28,8 @@ function get_common_char(strings::Vector{String})
         all(row) && (found_index = index)
     end
 
-    found_index == 0 && return '_'
-    return get_char_from_index(found_index)
+    found_index == 0 && error("No common chars found")
+    return found_index
 end
 get_common_char(values...) = get_common_char([values...])
 
@@ -40,7 +40,7 @@ function part1(input_array)
         value = row[1]
         val1 = value[1:Int(length(value)/2)]
         val2 = value[Int(length(value)/2)+1:end]
-        points += get_char_index(get_common_char(val1,val2))
+        points += get_common_char(val1,val2)
     end
     points
 end
@@ -51,9 +51,7 @@ function part2(input_array)
     
     points = 0
     for (index,_) in enumerate(input_array[1:3:end])
-        common_char = get_common_char(input_array[index*3-2],input_array[index*3-1],input_array[index*3])
-        points += get_char_index(common_char)
-        
+        points += get_common_char(input_array[index*3-2],input_array[index*3-1],input_array[index*3])
     end
     points
 end
