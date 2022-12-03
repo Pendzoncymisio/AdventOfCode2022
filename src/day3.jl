@@ -8,12 +8,7 @@ function get_char_index(char::Char)
     return Int(char) - 38
 end
 
-function get_char_from_index(index::Int)
-    index <= 26 && return Char(index+96)
-    return Char(index+38)
-end
-
-function get_common_char(strings::Vector{String})
+function get_common_char(strings::Vector{String}) #It turns out that can be achieved by simple "∩"
 
     flags_matrix = Array{Bool}(undef, 52, 0)
     for string in strings
@@ -36,11 +31,9 @@ get_common_char(values...) = get_common_char([values...])
 function part1(input_array)
     
     points = 0
-    for row in eachrow(input_array)
-        value = row[1]
-        val1 = value[1:Int(length(value)/2)]
-        val2 = value[Int(length(value)/2)+1:end]
-        points += get_common_char(val1,val2)
+    for row in input_array
+        half = Int(length(row)/2)
+        points += get_common_char(row[1:half],row[half+1:end])
     end
     points
 end
@@ -50,8 +43,8 @@ println("Part1: ",part1(input_array))
 function part2(input_array)
     
     points = 0
-    for (index,_) in enumerate(input_array[1:3:end])
-        points += get_common_char(input_array[index*3-2],input_array[index*3-1],input_array[index*3])
+    for index in 1:3:length(input_array)
+        points += get_common_char(input_array[index],input_array[index+1],input_array[index+2])
     end
     points
 end
