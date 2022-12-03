@@ -1,6 +1,6 @@
 using DelimitedFiles
 
-input_array = readdlm("$(@__DIR__)\\..\\inputs\\day1.txt",',',Any,skipblanks=false)
+input_array = readdlm(joinpath(@__DIR__,"..","inputs","day1.txt"),',',Any,skipblanks=false)
 
 function get_sorted_calories(input_array)
     current_calories = 0

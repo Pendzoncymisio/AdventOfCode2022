@@ -1,6 +1,6 @@
 using DelimitedFiles
 
-input_array = readdlm("$(@__DIR__)\\..\\inputs\\day2.txt",' ',Char,skipblanks=false)
+input_array = readdlm(joinpath(@__DIR__,"..","inputs","day2.txt"),' ',Char,skipblanks=false)
 
 function part1(input_array)
 
