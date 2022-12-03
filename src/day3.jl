@@ -7,17 +7,16 @@ function get_char_index(char::Char)
     return Int(char) - 38
 end
 
-function get_common_char(values::Vector{String})
-    char_flags = [false for i in 1:52]
-    for char in values[1]
-        char_flags[get_char_index(char)] = true
+function get_common_char(strings::Vector{String})
+    char_flags = [0 for i in 1:52]
+
+    for string in strings
+        for char in string
+            char_flags[get_char_index(char)] += 1
+        end
     end
 
-    for char in values[2]
-        char_flags[get_char_index(char)] && return char
-    end
-
-    return '_'
+    return indexin(length(strings),char_flags)
 end
 get_common_char(values...) = get_common_char([values...])
 
@@ -27,7 +26,7 @@ function part1(input_array)
     for row in eachrow(input_array)
         value = row[1]
         val1 = value[1:Int(length(value)/2)]
-        val2 = value[Int(length(value)/2)+1:length(value)]
+        val2 = value[Int(length(value)/2)+1:end]
         #println(value,' ',val1,' ',val2)
         points += get_char_index(get_common_char(val1,val2))
     end
