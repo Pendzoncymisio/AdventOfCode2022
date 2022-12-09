@@ -52,22 +52,61 @@ end
 
 
 function part2(input_array)
-    dim = 5
+    dim = 99
+    max_scenic_score = 0
     for i in 2:dim-1
-        highest_tree = -1
         for j in 2:dim-1
-            check_tree = input_array[i,j]
-            i_offset = -1
-            j_offset = -1
+            current_tree = input_array[i,j]
             scenic_score = 1
-            current_view = 1
-            while check_tree > input_array[i+i_offset,j]
-                current_view += 1
-                i_offset -= 1
-            end
 
+            offset_delta = -1
+            offset = offset_delta
+            current_view = 0
+            while true
+                i+offset == 0 && break
+                current_view += 1
+                current_tree <= input_array[i+offset,j] && break
+                offset += offset_delta
+            end
+            scenic_score *= current_view
+            
+            offset_delta = 1
+            offset = offset_delta
+            current_view = 0
+            while true
+                i+offset == dim+1 && break
+                current_view += 1
+                current_tree <= input_array[i+offset,j] && break
+                offset += offset_delta
+            end
+            scenic_score *= current_view
+
+            offset_delta = -1
+            offset = offset_delta
+            current_view = 0
+            while true
+                j+offset == 0 && break
+                current_view += 1
+                current_tree <= input_array[i,j+offset] && break
+                offset += offset_delta
+            end
+            scenic_score *= current_view
+            
+            offset_delta = 1
+            offset = offset_delta
+            current_view = 0
+            while true
+                j+offset == dim+1 && break
+                current_view += 1
+                current_tree <= input_array[i,j+offset] && break
+                offset += offset_delta
+            end
+            scenic_score *= current_view
+
+            max_scenic_score < scenic_score && (max_scenic_score = scenic_score)
         end
     end
+    max_scenic_score
 end
 
 part2(input_array)
