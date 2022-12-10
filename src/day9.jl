@@ -1,5 +1,8 @@
 using DelimitedFiles
 using Agents
+using CSV
+using InteractiveDynamics
+using CairoMakie
 
 input_array = readdlm(joinpath(@__DIR__,"..","inputs","day9.txt"),' ')
 
@@ -8,11 +11,12 @@ input_array = readdlm(joinpath(@__DIR__,"..","inputs","day9.txt"),' ')
 end
 
 function initialize_model(input_array)
-    grid_dim = (1000,1000)
+    grid_dim = (20,20)
     space = GridSpace(grid_dim, metric=:chebyshev, periodic = false)
     properties = Dict(:step => 1,
                     :row => 1,
-                    :move => "R",
+                    :row_move => 0,
+                    :move => "D",
                     :input_array=> input_array,
                     :direction_dict => Dict("R"=>(1,0),"L"=>(-1,0),"U"=>(0,1),"D"=>(0,-1)),
                     :head_prev_pos => (500,500),
@@ -20,6 +24,7 @@ function initialize_model(input_array)
                     :tail_history => [],
                     )
     model = ABM(Knot, space; properties = properties, scheduler = Schedulers.by_id)
+    model.move = model.input_array[1]
 
     head = Knot(1, Int.(grid_dim./ 2), true)
     add_agent!(head, Int.(grid_dim./ 2), model)
@@ -42,19 +47,40 @@ function agent_step!(agent, model)
 end
 
 function model_step!(model)
-    #println(model.step,model[1].pos,model[2].pos)
+    #println(model.row," ",model.row_move," ",model.move)
+    model.row_move += 1
+    if model.row_move == model.input_array[model.row,2]
+        model.row_move = 0
+        model.row += 1
+        model.move = model.input_array[model.row,1]
+    end
     model.step += 1
     push!(model.head_history,model[1].pos)
     push!(model.tail_history,model[2].pos)
 end
 
-function part1(model)
-    
-    for row in eachrow(model.input_array)
-        model.move = row[1]
-        step!(model,agent_step!,model_step!,row[2])
-    end
-    length(Set(model.tail_history))
+function n(model,step)
+    model.row < size(model.input_array,1) && return false
+    return true
 end
 
-part1(initialize_model(input_array))
+function part1(model)
+    adata = [:type, :pos]
+    agent_df, model_df = run!(model, agent_step!, model_step!, n; adata)
+#=
+    print(agent_df)
+    CSV.write(joinpath(@__DIR__,"..","inputs","day9_output.csv"), agent_df)
+    groupcolor(a) = a.type ? :blue : :orange
+    abmvideo(
+        joinpath(@__DIR__,"..","inputs","day9_video.mp4"), model, agent_step!;
+        ac = groupcolor, am = :rect, as = 10,
+        framerate = 4, frames = 20,
+        title = "Catching the head"
+    )
+    =#
+    InteractiveDynamics.abmexploration(model)
+
+    length(Set(model.tail_history))
+end
+model = initialize_model(input_array)
+part1(model)
