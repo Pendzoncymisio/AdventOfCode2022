@@ -7,16 +7,25 @@ input_array = readdlm(joinpath(@__DIR__,"..","inputs","day9.txt"),' ')
     type::Bool #true when head, false when tail
 end
 
-function initialize_model()
-    space = GridSpace((1000, 1000), metric=:chebyshev, periodic = false)
-    properties = Dict(:step => 1, :row => 1, :move => "R", :direction_dict => Dict("R"=>(1,0),"L"=>(-1,0),"U"=>(0,1),"D"=>(0,-1)), :head_prev_pos => (50,50), :head_history =>[], :tail_history => [])
+function initialize_model(input_array)
+    grid_dim = (1000,1000)
+    space = GridSpace(grid_dim, metric=:chebyshev, periodic = false)
+    properties = Dict(:step => 1,
+                    :row => 1,
+                    :move => "R",
+                    :input_array=> input_array,
+                    :direction_dict => Dict("R"=>(1,0),"L"=>(-1,0),"U"=>(0,1),"D"=>(0,-1)),
+                    :head_prev_pos => (500,500),
+                    :head_history => [],
+                    :tail_history => [],
+                    )
     model = ABM(Knot, space; properties = properties, scheduler = Schedulers.by_id)
 
-    head = Knot(1, (500, 500), true)
-    add_agent!(head, (500, 500), model)
+    head = Knot(1, Int.(grid_dim./ 2), true)
+    add_agent!(head, Int.(grid_dim./ 2), model)
 
-    tail = Knot(2, (500, 500), false)
-    add_agent!(tail, (500, 500), model)
+    tail = Knot(2, Int.(grid_dim./ 2), false)
+    add_agent!(tail, Int.(grid_dim./ 2), model)
     
     return model
 end
@@ -39,13 +48,13 @@ function model_step!(model)
     push!(model.tail_history,model[2].pos)
 end
 
-function part1(input_array, model)
-
-    for row in eachrow(input_array)
+function part1(model)
+    
+    for row in eachrow(model.input_array)
         model.move = row[1]
         step!(model,agent_step!,model_step!,row[2])
     end
     length(Set(model.tail_history))
 end
 
-part1(input_array, initialize_model())
+part1(initialize_model(input_array))
