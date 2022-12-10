@@ -11,7 +11,7 @@ input_array = readdlm(joinpath(@__DIR__,"..","inputs","day9.txt"),' ')
 end
 
 function initialize_model(input_array)
-    grid_dim = (20,20)
+    grid_dim = (1000,1000)
     space = GridSpace(grid_dim, metric=:chebyshev, periodic = false)
     properties = Dict(:step => 1,
                     :row => 1,
@@ -38,7 +38,7 @@ end
 function agent_step!(agent, model)
     if agent.type #move head
         model.head_prev_pos = agent.pos
-        walk!(agent,model.direction_dict[model.move],model)
+        walk!(agent,model.direction_dict[model.move],model; ifempty = false)
     else #move tail
         if max(abs(model[1].pos[1] - agent.pos[1]),abs(model[1].pos[2] - agent.pos[2])) > 1
             move_agent!(agent,model.head_prev_pos,model) 
@@ -60,27 +60,28 @@ function model_step!(model)
 end
 
 function n(model,step)
-    model.row < size(model.input_array,1) && return false
+    step < sum(model.input_array[:,2]) - 1 && return false
     return true
 end
 
 function part1(model)
     adata = [:type, :pos]
     agent_df, model_df = run!(model, agent_step!, model_step!, n; adata)
-#=
+
     print(agent_df)
-    CSV.write(joinpath(@__DIR__,"..","inputs","day9_output.csv"), agent_df)
-    groupcolor(a) = a.type ? :blue : :orange
-    abmvideo(
-        joinpath(@__DIR__,"..","inputs","day9_video.mp4"), model, agent_step!;
-        ac = groupcolor, am = :rect, as = 10,
-        framerate = 4, frames = 20,
-        title = "Catching the head"
-    )
-    =#
-    InteractiveDynamics.abmexploration(model)
+    #CSV.write(joinpath(@__DIR__,"..","inputs","day9_output.csv"), agent_df)
 
     length(Set(model.tail_history))
 end
+
 model = initialize_model(input_array)
-part1(model)
+part1(model) #add 1 to final solution 
+#=
+groupcolor(a) = a.type ? :blue : :orange
+abmvideo(
+        joinpath(@__DIR__,"..","inputs","day9_video.mp4"), initialize_model(input_array), agent_step!, model_step!;
+        ac = groupcolor, am = :rect, as = 10,
+        framerate = 1, frames = 1000,
+        title = "Catching the head"
+    )
+    =#
