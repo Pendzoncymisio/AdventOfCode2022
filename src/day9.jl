@@ -11,7 +11,7 @@ input_array = readdlm(joinpath(@__DIR__,"..","inputs","day9.txt"),' ')
 end
 
 function initialize_model(input_array, rope_length)
-    grid_dim = (100,100)
+    grid_dim = (1000,1000)
     space = GridSpace(grid_dim, metric=:chebyshev, periodic = false)
     properties = Dict(:step => 1,
                     :row => 1,
@@ -43,7 +43,20 @@ function agent_step!(agent, model)
     else #move segment
         prev_agent_id = agent.id - 1
         if max(abs(model[prev_agent_id].pos[1] - agent.pos[1]),abs(model[prev_agent_id].pos[2] - agent.pos[2])) > 1
-            move_agent!(agent,model.prev_state[prev_agent_id].pos,model) 
+            #move_agent!(agent,model.prev_state[prev_agent_id].pos,model)
+            x = 0
+            y = 0
+            if (model[prev_agent_id].pos[1] - agent.pos[1]) != 0 && model[prev_agent_id].pos[2] - agent.pos[2] != 0 # MOVE DIAGONALLY
+                model[prev_agent_id].pos[1] - agent.pos[1] > 0 ? x=1 : x=-1
+                model[prev_agent_id].pos[2] - agent.pos[2] > 0 ? y=1 : y=-1
+            else #MOVE STRAIGHT
+                if model[prev_agent_id].pos[1] - agent.pos[1] == 0
+                    model[prev_agent_id].pos[2] - agent.pos[2] > 0 ? y=1 : y=-1
+                else
+                    model[prev_agent_id].pos[1] - agent.pos[1] > 0 ? x=1 : x=-1
+                end
+            end
+            walk!(agent,(x,y),model; ifempty = false)
         end
     end
 end
@@ -82,7 +95,6 @@ end
 
 model = initialize_model(input_array,9)
 part1(model) #add 1 to final solution 
-
 #=
 groupcolor(a) = a.type ? :blue : :orange
 abmvideo(
@@ -91,4 +103,5 @@ abmvideo(
         framerate = 1, frames = 24,
         title = "Catching the head"
     )
-  =#  
+
+    =#
