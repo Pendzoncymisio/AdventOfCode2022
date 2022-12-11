@@ -10,8 +10,8 @@ input_array = readdlm(joinpath(@__DIR__,"..","inputs","day9.txt"),' ')
     type::Bool #true when head, false when tail
 end
 
-function initialize_model(input_array)
-    grid_dim = (1000,1000)
+function initialize_model(input_array, rope_length)
+    grid_dim = (100,100)
     space = GridSpace(grid_dim, metric=:chebyshev, periodic = false)
     properties = Dict(:step => 1,
                     :row => 1,
@@ -19,9 +19,10 @@ function initialize_model(input_array)
                     :move => "D",
                     :input_array=> input_array,
                     :direction_dict => Dict("R"=>(1,0),"L"=>(-1,0),"U"=>(0,1),"D"=>(0,-1)),
-                    :head_prev_pos => (500,500),
+                    :head_prev_pos => (100,100),
                     :head_history => [],
                     :tail_history => [],
+                    :prev_state => Dict{Int64, Knot},
                     )
     model = ABM(Knot, space; properties = properties, scheduler = Schedulers.by_id)
     model.move = model.input_array[1]
@@ -29,24 +30,26 @@ function initialize_model(input_array)
     head = Knot(1, Int.(grid_dim./ 2), true)
     add_agent!(head, Int.(grid_dim./ 2), model)
 
-    tail = Knot(2, Int.(grid_dim./ 2), false)
-    add_agent!(tail, Int.(grid_dim./ 2), model)
-    
+    for i in 1:rope_length
+        add_agent!(Knot(i+1, Int.(grid_dim./ 2), false), Int.(grid_dim./ 2), model)
+    end
     return model
 end
 
 function agent_step!(agent, model)
     if agent.type #move head
-        model.head_prev_pos = agent.pos
+        #model.head_prev_pos = agent.pos
         walk!(agent,model.direction_dict[model.move],model; ifempty = false)
-    else #move tail
-        if max(abs(model[1].pos[1] - agent.pos[1]),abs(model[1].pos[2] - agent.pos[2])) > 1
-            move_agent!(agent,model.head_prev_pos,model) 
+    else #move segment
+        prev_agent_id = agent.id - 1
+        if max(abs(model[prev_agent_id].pos[1] - agent.pos[1]),abs(model[prev_agent_id].pos[2] - agent.pos[2])) > 1
+            move_agent!(agent,model.prev_state[prev_agent_id].pos,model) 
         end
     end
 end
 
 function model_step!(model)
+    model.prev_state = deepcopy(model.agents)
     #println(model.row," ",model.row_move," ",model.move)
     model.row_move += 1
     if model.row_move == model.input_array[model.row,2]
@@ -56,7 +59,7 @@ function model_step!(model)
     end
     model.step += 1
     push!(model.head_history,model[1].pos)
-    push!(model.tail_history,model[2].pos)
+    push!(model.tail_history,model[10].pos)
 end
 
 function n(model,step)
@@ -68,20 +71,24 @@ function part1(model)
     adata = [:type, :pos]
     agent_df, model_df = run!(model, agent_step!, model_step!, n; adata)
 
-    print(agent_df)
+    #print(agent_df)
     #CSV.write(joinpath(@__DIR__,"..","inputs","day9_output.csv"), agent_df)
 
     length(Set(model.tail_history))
 end
 
-model = initialize_model(input_array)
+#model = initialize_model(input_array,1)
+#part1(model) #add 1 to final solution 
+
+model = initialize_model(input_array,9)
 part1(model) #add 1 to final solution 
+
 #=
 groupcolor(a) = a.type ? :blue : :orange
 abmvideo(
-        joinpath(@__DIR__,"..","inputs","day9_video.mp4"), initialize_model(input_array), agent_step!, model_step!;
+        joinpath(@__DIR__,"..","inputs","day9_video.mp4"), initialize_model(input_array,9), agent_step!, model_step!;
         ac = groupcolor, am = :rect, as = 10,
-        framerate = 1, frames = 1000,
+        framerate = 1, frames = 24,
         title = "Catching the head"
     )
-    =#
+  =#  
