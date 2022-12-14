@@ -2,7 +2,6 @@ using DelimitedFiles
 
 input_array = readdlm(joinpath(@__DIR__,"..","inputs","day10.txt"),' ')
 
-
 function part1(input_array)
     cycle_count = 0
     X = 1
@@ -24,4 +23,8 @@ function part1(input_array)
     strenght_sum
 end
 
-part1(input_array)
+#part1(input_array)
+
+function part2(input_array)
+    op_number = sum((input_array[:,1] .== "noop") + (input_array[:,1] .== "addx") * 2)
+end
