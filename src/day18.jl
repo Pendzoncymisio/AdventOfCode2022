@@ -1,7 +1,7 @@
 using DelimitedFiles
 using Pipe
 
-input_array = @pipe readdlm(joinpath(@__DIR__,"..","inputs","day18.txt"),' ',String) .|> split(_,',') .|> parse.(Int,_)
+input_array = @pipe readdlm(joinpath(@__DIR__,"..","inputs","day18.txt"),' ',String) .|> split(_,',') .|> parse.(Int,_) |> vec(_)
 
 function part1(input_array)
     sides = 0
