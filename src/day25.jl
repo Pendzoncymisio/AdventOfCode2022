@@ -26,8 +26,21 @@ function snafu_to_decimal(row)
     decimal
 end
 
-function decimal_to_snafu(number)
-    
+snafu_rem_dict = Dict(4 => (1,'-'), 3=> (1,'='), 2=>(0,'2'), 1=>(0,'1'),0=>(0,'0'))
+
+function decimal_to_snafu(number,level=0,carry=0)
+    rem = (number % (5^(level+1)))/(5^level)
+
+    level_rem = rem+carry
+    carry, snafu_sign = snafu_rem_dict[level_rem]
+
+    if number-rem*5^level > 0
+        decimal_to_snafu(number-rem*(5^level),level+1,carry) * snafu_sign
+    elseif carry == 1
+        '1' * snafu_sign
+    else
+        snafu_sign
+    end
 end
 
 function test_aa(aaa)
@@ -45,7 +58,7 @@ function part1(input_array)
         
         rows_sum += snafu_to_decimal(row[1])
     end
-    println(rows_sum)
+    println(decimal_to_snafu(rows_sum))
 end
 
 part1(input_array)
