@@ -24,6 +24,11 @@ function initialize_model(input_array)
                     :started => false,
                     :available_spaces => [],
                     :max_distance => 0,
+                    :sim_phase => 1,
+                    :sim_finished => false,
+                    :i_am_outside_space => false,
+                    :i_am_turning_around => false,
+                    :phases_to_go => 1,
                     )
     model = ABM(Blizzard, space; properties = properties, scheduler = Schedulers.by_id)
 
@@ -42,15 +47,23 @@ function agent_step!(agent, model)
     walk!(agent,model.direction_dict[agent.move],model; ifempty = false)    
 end
 
-function try_kickstarting(model)
-    if isempty((1,1), model) 
-        push!(model.available_spaces, (1,1))
-        model.started = true
+function go_back(model)
+    model.i_am_turning_around = true
+    if model.i_am_turning_around && !model.i_am_outside_space
+        model.available_spaces = []
+        model.i_am_outside_space = true
+    elseif model.i_am_turning_around && model.i_am_outside_space
+        model.i_am_turning_around = false
+        model.i_am_outside_space = false
     end
 end
 
 function model_step!(model)
-    model.started || try_kickstarting(model)
+    if model.sim_phase % 2 == 1 && isempty((1,1), model) 
+        push!(model.available_spaces, (1,1))
+    elseif model.sim_phase % 2 == 0 && isempty(size(model.space), model)
+        push!(model.available_spaces, size(model.space))
+    end
     new_fields = []
     for field in model.available_spaces
         for dir in values(model.direction_dict)
@@ -70,39 +83,50 @@ function model_step!(model)
         end
     end
     model.available_spaces = unique(new_fields)
-    println(model.step," ",length(new_fields)," ", model.max_distance)
     model.step += 1;
+
+    if model.sim_phase % 2 == 1 && size(model.space) in model.available_spaces
+        model.phases_to_go == model.sim_phase && (model.sim_finished = true) # Finish simulation if last phase
+        model.sim_phase += 1
+        go_back(model)
+    elseif model.sim_phase % 2 == 0 && (1, 1) in model.available_spaces
+        model.phases_to_go == model.sim_phase && (model.sim_finished = true) # Finish simulation if last phase
+        model.sim_phase += 1
+        go_back(model)
+    elseif model.i_am_turning_around
+        go_back(model)
+    end
 end
 
 function n(model, step) #step when false
-    if step < 10000 && !(size(model.space) in model.available_spaces)
-        return false
-    end
-    return true
+    return model.sim_finished
 end
 
-model = initialize_model(input_array)
 
-function part1(model)
+function parts(input_array, phases_to_go)
+    model = initialize_model(input_array)
+    model.phases_to_go = phases_to_go
     adata = [:pos]
-    mdata = [:available_spaces]
+    mdata = [:sim_phase,:available_spaces]
     agent_df, model_df = run!(model, agent_step!, model_step!, n; adata, mdata)
 
     #print(agent_df)
     CSV.write(joinpath(@__DIR__,"..","inputs","day24_output.csv"), model_df)
-    println(model.step)
+    return model.step
 end
 
-part1(model)
+println("Part1: ",parts(input_array, 1))
+println("Part2: ",parts(input_array, 3))
 
-#=
+#= OUTPUTTING ANIMATING GRAPH
 am(a) = a.move
 
 abmvideo(
         joinpath(@__DIR__,"..","inputs","day24_video.mp4"), initialize_model(input_array), agent_step!, model_step!;
         #ac = groupcolor, 
         am = am, as = 50,
-        framerate = 1, frames = 20,
+        framerate = 1, frames = 30,
         title = "Catching the head"
     )
+
 =#
