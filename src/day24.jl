@@ -20,7 +20,7 @@ function initialize_model(input_array)
     grid_dim = size(input_array)
     space = GridSpace(grid_dim, periodic = true)
     properties = Dict(:step => 1,
-                    :direction_dict => Dict('>'=>(1,0),'<'=>(-1,0),'^'=>(0,1),'v'=>(0,-1), '.'=>(0,0)),
+                    :direction_dict => Dict('>'=>(0,1),'<'=>(0,-1),'^'=>(-1,0),'v'=>(1,0), '.'=>(0,0)),
                     :started => false,
                     :available_spaces => [],
                     :max_distance => 0,
@@ -50,14 +50,13 @@ function try_kickstarting(model)
 end
 
 function model_step!(model)
-    println(model.step)
     model.started || try_kickstarting(model)
     new_fields = []
-    #=for field in model.available_spaces
+    for field in model.available_spaces
         for dir in values(model.direction_dict)
             check_field = field .+ dir
             try
-                if isempty(check_field, model) && (check_field[1] + check_field[2] >= model.max_distance - 2)
+                if isempty(check_field, model) && (check_field[1] + check_field[2] >= model.max_distance - 150)
                     push!(new_fields, check_field)
                     if check_field[1] + check_field[2] > model.max_distance
                         model.max_distance = check_field[1] + check_field[2]
@@ -69,13 +68,14 @@ function model_step!(model)
                 end
             end
         end
-    end=#
-    model.available_spaces = new_fields
+    end
+    model.available_spaces = unique(new_fields)
+    println(model.step," ",length(new_fields)," ", model.max_distance)
     model.step += 1;
 end
 
 function n(model, step) #step when false
-    if step < 20 && !(size(model.space) in model.available_spaces)
+    if step < 10000 && !(size(model.space) in model.available_spaces)
         return false
     end
     return true
@@ -95,7 +95,7 @@ end
 
 part1(model)
 
-
+#=
 am(a) = a.move
 
 abmvideo(
@@ -105,3 +105,4 @@ abmvideo(
         framerate = 1, frames = 20,
         title = "Catching the head"
     )
+=#
