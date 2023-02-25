@@ -16,13 +16,11 @@ input_array = @pipe readdlm(joinpath(@__DIR__,"..","inputs","day24.txt"),';',Str
     move::Char #<>^v
 end
 
-
 function initialize_model(input_array)
     grid_dim = size(input_array)
-    grid_dim = (grid_dim[2], grid_dim[1])
     space = GridSpace(grid_dim, periodic = true)
     properties = Dict(:step => 1,
-                    :direction_dict => Dict('>'=>(1,0),'<'=>(-1,0),'^'=>(0,-1),'v'=>(0,1), '.'=>(0,0)),
+                    :direction_dict => Dict('>'=>(1,0),'<'=>(-1,0),'^'=>(0,1),'v'=>(0,-1), '.'=>(0,0)),
                     :started => false,
                     :available_spaces => [],
                     :max_distance => 0,
@@ -32,8 +30,8 @@ function initialize_model(input_array)
     i = 1
     for (ind, val) in pairs(input_array)
         if val != '.'
-            tmp_agent = Blizzard(i, (ind[2],ind[1]), val)
-            add_agent!(tmp_agent, (ind[2],ind[1]), model)
+            tmp_agent = Blizzard(i, Tuple(ind), val)
+            add_agent!(tmp_agent, Tuple(ind), model)
             i += 1
         end
     end
@@ -97,7 +95,6 @@ end
 
 part1(model)
 
-#=
 am(a) = a.move
 
 #groupcolor(a) = a.type ? :blue : :orange
@@ -108,4 +105,3 @@ abmvideo(
         framerate = 1, frames = 20,
         title = "Catching the head"
     )
-=#
