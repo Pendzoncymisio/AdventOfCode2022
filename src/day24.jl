@@ -95,9 +95,9 @@ end
 
 part1(model)
 
+
 am(a) = a.move
 
-#groupcolor(a) = a.type ? :blue : :orange
 abmvideo(
         joinpath(@__DIR__,"..","inputs","day24_video.mp4"), initialize_model(input_array), agent_step!, model_step!;
         #ac = groupcolor, 
