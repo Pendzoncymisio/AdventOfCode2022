@@ -26,7 +26,7 @@ function init_deque()
 end
 
 function initialize_model(input_array)
-    margin = 20
+    margin = 5
     grid_dim = size(input_array) .+ margin * 2
     space = GridSpaceSingle(grid_dim, periodic = false)
 
@@ -35,6 +35,8 @@ function initialize_model(input_array)
                     :direction_deque => init_deque(),
                     :direction_neigh => Dict('E'=>('N','S'),'W'=>('N','S'),'N'=>('E','W'),'S'=>('E','W')),
                     :sim_phase => :proposing,
+                    :elves_moving => true,
+                    :agents_moving => [],
                     )
     model = ABM(Elf, space; properties = properties, scheduler = Schedulers.by_id)
 
@@ -50,8 +52,11 @@ function initialize_model(input_array)
 end
 
 function agent_step!(agent, model)
+
     if model.sim_phase == :proposing
-        
+        agent.id == 1 && (model.elves_moving = false)
+        agent.id == 1 && (model.agents_moving = [])
+
         if length(collect(nearby_ids(agent, model, 1))) != 0
             for direction in model.direction_deque
                 if isempty(agent.pos .+ model.direction_dict[direction],model) &&
@@ -60,9 +65,11 @@ function agent_step!(agent, model)
 
                     agent.proposed_position = agent.pos .+ model.direction_dict[direction]
                     agent.moving = true
+                    push!(model.agents_moving, agent.id)
                     break
                 end
             end
+            model.elves_moving = true
         end
     elseif model.sim_phase == :solving
         for neighboor in nearby_agents(agent, model, 2)
@@ -133,14 +140,32 @@ function part1(input_array)
 
     return counter, model
 end
-counter, model = part1(input_array)
-println("Part1: ",counter)
-#=
+#counter, model = part1(input_array)
+#println("Part1: ",counter)
+
 abmvideo(
         joinpath(@__DIR__,"..","inputs","day24_video.mp4"), initialize_model(input_array), agent_step!, model_step!;
         #ac = groupcolor, 
         am = '●', as = 30,
-        framerate = 1, frames = 31,
+        framerate = 3, frames = 61,
         title = "Catching the head"
-    )=#
+    )
 
+function n_part2(model, step) #step when false
+    return !model.elves_moving
+end
+
+function part2(input_array)
+    model = initialize_model(input_array)
+    adata = [:pos]
+    mdata = [:step_calc, :agents_moving]
+    agent_df, model_df = run!(model, agent_step!, model_step!, n_part2; adata, mdata)
+
+    #print(agent_df)
+    CSV.write(joinpath(@__DIR__,"..","inputs","day23_output.csv"), model_df)
+
+    return model
+end
+
+model = part2(input_array)
+println("Part2: ",model.step_calc)
