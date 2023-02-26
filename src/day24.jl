@@ -61,8 +61,8 @@ end
 function model_step!(model)
     if model.sim_phase % 2 == 1 && isempty((1,1), model) 
         push!(model.available_spaces, (1,1))
-    elseif model.sim_phase % 2 == 0 && isempty(size(model.space), model)
-        push!(model.available_spaces, size(model.space))
+    elseif model.sim_phase % 2 == 0 && isempty(spacesize(model), model)
+        push!(model.available_spaces, spacesize(model))
     end
     new_fields = []
     for field in model.available_spaces
